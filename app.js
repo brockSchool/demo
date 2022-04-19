@@ -35,24 +35,28 @@ const authenticated_menu=[
         {label:"Change Password",function:"change_password()",panel: "password_panel"},
         {label:"Personal Data",function:"navigate({fn:'personal_data'})"},
     ]},
+
+    //***************creation of the new tab */
+    {label:"Physicians Assistant Tasks",home:"Inventory",function:"navigate({fn:'pa_Tasks'})"},
+
     //This menu item allows the user to logout
     {label:"Logout",function:"logout()", home:"Logout"},
     //This menu item builds a sub menu that provides the user with the functionality to request time off and see their requests
-    {label:"Time Off",id:"menu1",menu:[
+    /*{label:"Time Off",id:"menu1",menu:[
         {label:"Request Time Off",function:"navigate({fn:'request_time_off'})"}, 
         {label:"My Requests",function:"navigate({fn:'show_time_off'})"}, 
-    ]},
+    ]},*/
     //This menu item allows the user to add additional users. Note the "roles" property of the object. Only users with the role of "manager", "owner", or "administrator" will see this menu item. User roles are not heirachical. All user types you wish to see a menu item must be listed in the elements of the array.
-    {label:"Add Employee",function:"navigate({fn:'create_account'})", roles:["manager","owner","administrator"]}, 
+    //{label:"Add Employee",function:"navigate({fn:'create_account'})", roles:["manager","owner","administrator"]}, 
     //This menu item adds the menu item for updating an inventory count. Notice how a parameter is passed to the "ice_cream_inventory" function
-    {label:"Enter Ice Cream Inventory",home:"Inventory",function:"navigate({fn:'ice_cream_inventory',params:{style:'update'}})"},
+    //{label:"Enter Ice Cream Inventory",home:"Inventory",function:"navigate({fn:'ice_cream_inventory',params:{style:'update'}})"},
     //the remaining menu items are added
-    {label:"Ice Cream Inventory Summary",home:"Inventory",function:"navigate({fn:'ice_cream_inventory',params:{style:'summary'}})", roles:["owner","administrator"]},
-    {label:"Employee List",function:"navigate({fn:'employee_list'})"},
-    {label:"Admin Tools",id:"menu2", roles:["manager","owner","administrator"], menu:[
+    //{label:"Ice Cream Inventory Summary",home:"Inventory",function:"navigate({fn:'ice_cream_inventory',params:{style:'summary'}})", roles:["owner","administrator"]},
+    //{label:"Employee List",function:"navigate({fn:'employee_list'})"},
+    /*{label:"Admin Tools",id:"menu2", roles:["manager","owner","administrator"], menu:[
         {label:"Update User",function:"update_user()",panel:"update_user"},
         {label:"Archive Inventory",function:"navigate({fn:'archive_inventory'})"},
-    ]},
+    ]},*/
 
 ]
 
@@ -163,6 +167,59 @@ async function archive_inventory(){
     
 }
 
+async function pa_Tasks(){
+    if(!logged_in()){show_home();return}//in case followed a link after logging out. This prevents the user from using this feature when they are not authenticated.
+
+    //First we hide the menu
+    hide_menu()
+    console.log('at pa_Tasks. ')
+
+    //This function is set up recursively to build the page for working with inventory. The first time the function is called, the HTML shell is created for displaying either the inventory form for recording the count or the inventory report. Note that this will only be built if there is a "style" property set when the function is called. Once the shell is created, the function is called again to either built the form for recording an inventory count or create the summary report.
+        //building the HTML shell
+        tag("canvas").innerHTML=` 
+            <div class="page">
+                <div id="inventory-title" style="text-align:center"><h2>PA Tasks</h2></div>
+                <div id="inventory-message" style="width:100%"></div>
+                <div id="inventory_panel"  style="width:100%">
+                </div>
+            </div>`
+
+
+            const params = {mode: "get_pa_tasks"}
+            const response=await post_data(params)
+            console.log('response:',response)
+
+            const header=[`
+                <table class="inventory-table">
+                    <tr>
+                    <th class="sticky">Name</th>
+                    <th class="sticky">Task Completed</th>
+                    `]
+                header.push("</tr>")
+                const html=[header.join("")]
+
+                for(record of response.data){
+                    let target=html
+                    //add a new table row to the table for each flavor
+                    target.push("<tr>")
+                    //insert the flavor name (record.field.name)
+                    target.push(`<td style="text-align:left">${record.fields.Name}</td>`)
+                    //create empty cells in the table for the inventory counts. Notice that the ID for the empty cell is set to be a combination of the id for the flavor (record.id) and the store (stores[store]) corresponding to the column. This way the table can be populated with the correct data in the correct cells.
+                    target.push(`<td style="text-align:center" id="${record.fields.Completed}"><input type="checkbox"></button></td>`)
+                    //target.push(`<td><button type="button">Submit</button></td>`)
+                    target.push("</tr>")
+                }   
+                let lower = html
+                lower.push("<div>")
+                    lower.push ("<tr>")
+                    lower.push(`<td><button type="button">Submit</button></td>`)
+                    lower.push("</tr>")
+                lower.push("</div>")
+                
+                //this adds a table for the "irregular" items that might be counted.
+                html.push("</table>")
+                tag("inventory_panel").innerHTML=html.join("")
+}
 
 async function ice_cream_inventory(params){
     //this function is used both the record inventory counts and to build a summary report. The "style" property of the params sent to the function determines whether the function is in "count" mode or "summary" mode. Also, if the user has access to multiple stores, they will be presented with the option to select the store they wish to work with.
