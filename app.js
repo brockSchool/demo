@@ -72,10 +72,9 @@ function show_home(){
 
     tag("canvas").innerHTML=` 
     <div class="center-screen">
-    
-    <p><img height="${window.innerHeight * .6}" src="https://www.brookersicecream.com/wp-content/uploads/2018/08/brookers-logo-final-large.png"></p>
+    <h1>Utah Valley University Physicians Assistant Program</h1>
+    <p><img height="${window.innerHeight * .6}" src="https://npr.brightspotcdn.com/dims4/default/faf6755/2147483647/strip/true/crop/5852x3292+0+0/resize/880x495!/quality/90/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2Flegacy%2Fsites%2Fkuer%2Ffiles%2F201912%2Fuvu_generic_04_baa.jpeg"></p>
     <div style="text-align:center"></div>
-    
     
     </div>
     `
